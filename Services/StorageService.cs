@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Aiursoft.Pylon.Services.ToOSSServer;
 using Aiursoft.Pylon.Models;
 using Aiursoft.Pylon.Models.OSS.ApiViewModels;
+using Aiursoft.Pylon.Services.ToProbeServer;
 
 namespace Aiursoft.Pylon.Services
 {
@@ -16,13 +17,22 @@ namespace Aiursoft.Pylon.Services
     {
         private readonly OSSApiService _ossApiService;
         private readonly AppsContainer _appsContainer;
+        private readonly FilesService _filesService;
+        private readonly ServiceLocation _serviceLocation;
+
         public StorageService(
             OSSApiService ossApiService,
-            AppsContainer appsContainer)
+            AppsContainer appsContainer,
+            FilesService filesService,
+            ServiceLocation serviceLocation)
         {
             _ossApiService = ossApiService;
             _appsContainer = appsContainer;
+            _filesService = filesService;
+            _serviceLocation = serviceLocation;
         }
+
+        [Obsolete]
         private async Task<string> _SaveLocally(IFormFile file, SaveFileOptions options = SaveFileOptions.RandomName, string name = "")
         {
             string directoryPath = GetCurrentDirectory() + DirectorySeparatorChar + $@"Storage" + DirectorySeparatorChar;
@@ -49,6 +59,7 @@ namespace Aiursoft.Pylon.Services
             return localFilePath;
         }
 
+        [Obsolete]
         public async Task<UploadFileViewModel> SaveToOSS(IFormFile file, int bucketId, int aliveDays, SaveFileOptions options = SaveFileOptions.RandomName, string accessToken = null, string name = "", bool deleteLocal = true)
         {
             string localFilePath = await _SaveLocally(file, options, name);
@@ -63,11 +74,35 @@ namespace Aiursoft.Pylon.Services
             }
             return fileAddress;
         }
+
+        public async Task<Models.Probe.FilesViewModels.UploadFileViewModel> SaveToProbe(IFormFile file, string siteName, string path, SaveFileOptions options = SaveFileOptions.RandomName, string accessToken = null)
+        {
+            string fileName = options == SaveFileOptions.RandomName ?
+                Guid.NewGuid().ToString("N") + GetExtension(file.FileName) :
+                file.FileName;
+            if (accessToken == null)
+            {
+                accessToken = await _appsContainer.AccessToken();
+            }
+            var result = await _filesService.UploadFileAsync(accessToken, siteName, path, file.OpenReadStream(), fileName, true);
+            return result;
+        }
+
+        public static string GetProbeDownloadAddress(ServiceLocation serviceLocation, string siteName, string path, string fileName)
+        {
+            var filePath = $"{path}/{fileName}".TrimStart('/');
+            return $"{serviceLocation.Probe}/Download/InSites/{siteName}/{filePath}";
+        }
+
+        public static string GetProbeDownloadAddress(ServiceLocation serviceLocation, string fullpath)
+        {
+            return $"{serviceLocation.Probe}/Download/InSites/{fullpath}";
+        }
     }
+
     public enum SaveFileOptions
     {
         RandomName,
-        SourceName,
-        TargetName
+        SourceName
     }
 }

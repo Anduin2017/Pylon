@@ -10,6 +10,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Aiursoft.Pylon.Services;
+using Aiursoft.Pylon.Models;
 
 namespace Aiursoft.Pylon.Middlewares
 {
@@ -47,6 +49,7 @@ namespace Aiursoft.Pylon.Middlewares
                         continue;
                     }
                     var args = GenerateArguments(method);
+                    var possibleResponses = PossibleResponses(method);
                     var api = new API
                     {
                         ControllerName = controller.Name,
@@ -54,13 +57,40 @@ namespace Aiursoft.Pylon.Middlewares
                         IsPost = method.CustomAttributes.Any(t => t.AttributeType == typeof(HttpPostAttribute)),
                         Arguments = args,
                         AuthRequired = JudgeAuthorized(method, controller),
-                        RequiresFile = JudgeRequiredFile(method, controller)
+                        RequiresFile = JudgeRequiredFile(method, controller),
+                        PossibleResponses = possibleResponses
                     };
                     actionsMatches.Add(api);
                 }
             }
             await context.Response.WriteAsync(JsonConvert.SerializeObject(actionsMatches));
             return;
+        }
+
+        private string[] PossibleResponses(MethodInfo action)
+        {
+            try
+            {
+                var possibleList = action.GetCustomAttributes(typeof(APIProduces))
+                    .Select(t => (t as APIProduces).PossibleType)
+                    .Select(t => InstanceMaker.Make(t))
+                    .Select(t => JsonConvert.SerializeObject(t)).ToList();
+                possibleList.Add(JsonConvert.SerializeObject(new AiurProtocol
+                {
+                    Code = ErrorType.WrongKey,
+                    Message = "Some error."
+                }));
+                possibleList.Add(JsonConvert.SerializeObject(new AiurCollection<string>(new List<string> { "Some item is invalid!" })
+                {
+                    Code = ErrorType.InvalidInput,
+                    Message = "Your input contains several errors!"
+                }));
+                return possibleList.ToArray();
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
         }
 
         private List<Argument> GenerateArguments(MethodInfo method)
@@ -175,6 +205,7 @@ namespace Aiursoft.Pylon.Middlewares
         public bool IsPost { get; set; }
         public List<Argument> Arguments { get; set; }
         public bool RequiresFile { get; set; }
+        public string[] PossibleResponses { get; set; }
     }
 
     public class Argument

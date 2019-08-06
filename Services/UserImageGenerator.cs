@@ -1,10 +1,7 @@
 ﻿using Aiursoft.Pylon.Models;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Identity;
-using System;
-using System.Collections.Generic;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Aiursoft.Pylon.Services
@@ -13,6 +10,7 @@ namespace Aiursoft.Pylon.Services
     {
         private readonly ServiceLocation _serviceLocation;
         private readonly UserManager<T> _userManager;
+
         public UserImageGenerator(
             ServiceLocation serviceLocation,
             UserManager<T> userManager)
@@ -32,9 +30,7 @@ namespace Aiursoft.Pylon.Services
         public async Task<string> GetUserImageUrl(ClaimsPrincipal userClaims)
         {
             var user = await _userManager.GetUserAsync(userClaims);
-            var userImageKey = user?.HeadImgFileKey;
-            var url =$"{_serviceLocation.OSSEndpoint}/download/fromkey/{userImageKey}.png";
-            return url;
+            return StorageService.GetProbeDownloadAddress(_serviceLocation, user.IconFilePath);
         }
     }
 }
