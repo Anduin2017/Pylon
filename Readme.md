@@ -40,3 +40,6 @@
 
 如果你真的专注于Aiursoft的扩展开发、开发Aiursoft的高层应用、研究Aiursoft的底层基础设施的实现，Pylon不失为一个不错的案例。
 
+## Pylon的版本历史
+
+请参考：[Nuget](https://www.nuget.org/packages/Aiursoft.Pylon/)
