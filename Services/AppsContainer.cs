@@ -1,10 +1,9 @@
-﻿using Aiursoft.Pylon.Services.ToAPIServer;
+﻿using Aiursoft.Pylon.Services.ToArchonServer;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Aiursoft.Pylon.Services.ToArchonServer;
 
 namespace Aiursoft.Pylon.Services
 {
@@ -13,29 +12,23 @@ namespace Aiursoft.Pylon.Services
     /// </summary>
     public class AppsContainer
     {
-        private List<AppContainer> _allApps;
-        private IServiceScopeFactory _scopeFactory;
+        private readonly List<AppContainer> _allApps;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public AppsContainer(IServiceScopeFactory scopeFactory)
         {
-            if (_allApps == null)
-            {
-                _allApps = new List<AppContainer>();
-            }
-            else
-            {
-                throw new InvalidOperationException("Created two all apps but this is singlton design patten!");
-            }
+            _allApps = new List<AppContainer>();
             _scopeFactory = scopeFactory;
         }
+
         private AppContainer GetApp(string appId, string appSecret)
         {
-            var exists = _allApps.Find(t => t.CurrentAppId == appId);
+            var exists = _allApps.FirstOrDefault(t => t.AppId == appId);
             if (exists == null)
             {
                 var newContainer = new AppContainer(appId, appSecret);
                 _allApps.Add(newContainer);
-                exists = _allApps.Find(t => t.CurrentAppId == appId);
+                exists = newContainer;
             }
             return exists;
         }
@@ -52,15 +45,16 @@ namespace Aiursoft.Pylon.Services
         }
     }
 
-    class AppContainer
+    public class AppContainer
     {
+        public readonly string AppId;
+        private readonly string _appSecret;
         public AppContainer(string appId, string appSecret)
         {
-            CurrentAppId = appId;
-            CurrentAppSecret = appSecret;
+            AppId = appId;
+            _appSecret = appSecret;
         }
-        public string CurrentAppId { get; private set; } = string.Empty;
-        public string CurrentAppSecret { get; private set; } = string.Empty;
+
         public async Task<string> AccessToken(IServiceScopeFactory scopeFactory)
         {
             if (DateTime.UtcNow > _accessTokenDeadTime)
@@ -68,9 +62,9 @@ namespace Aiursoft.Pylon.Services
                 using (var scope = scopeFactory.CreateScope())
                 {
                     var archonApiService = scope.ServiceProvider.GetRequiredService<ArchonApiService>();
-                    var ServerResult = await archonApiService.AccessTokenAsync(CurrentAppId, CurrentAppSecret);
-                    _latestAccessToken = ServerResult.AccessToken;
-                    _accessTokenDeadTime = ServerResult.DeadTime;
+                    var serverResult = await archonApiService.AccessTokenAsync(AppId, _appSecret);
+                    _latestAccessToken = serverResult.AccessToken;
+                    _accessTokenDeadTime = serverResult.DeadTime - TimeSpan.FromSeconds(20);
                 }
             }
             return _latestAccessToken;

@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Aiursoft.Pylon.Models
 {
-    public interface IPusher<T>
+    public interface IPusher
     {
         bool Connected { get; }
         Task Accept(HttpContext context);

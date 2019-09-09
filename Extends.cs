@@ -4,7 +4,6 @@ using Aiursoft.Pylon.Models.API.OAuthAddressModels;
 using Aiursoft.Pylon.Services;
 using Aiursoft.Pylon.Services.ToAPIServer;
 using Aiursoft.Pylon.Services.ToArchonServer;
-using Aiursoft.Pylon.Services.ToOSSServer;
 using Aiursoft.Pylon.Services.ToProbeServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -95,12 +94,25 @@ namespace Aiursoft.Pylon
             return app.UseMiddleware<APIDocGeneratorMiddleware>();
         }
 
+        public static IApplicationBuilder UseUserFriendlyErrorPage(this IApplicationBuilder app)
+        {
+            app.UseMiddleware<UserFriendlyServerExceptionMiddeware>();
+            app.UseMiddleware<UserFriendlyNotFoundMiddeware>();
+            return app;
+        }
+
+        public static IApplicationBuilder UseAPIFriendlyErrorPage(this IApplicationBuilder app)
+        {
+            app.UseMiddleware<APIFriendlyServerExceptionMiddeware>();
+            return app;
+        }
+
         public static IServiceCollection ConfigureLargeFileUpload(this IServiceCollection services)
         {
             return services.Configure<FormOptions>(x =>
             {
                 x.ValueLengthLimit = int.MaxValue;
-                x.MultipartBodyLengthLimit = int.MaxValue;
+                x.MultipartBodyLengthLimit = long.MaxValue;
             });
         }
 
@@ -188,7 +200,6 @@ namespace Aiursoft.Pylon
             services.AddScoped<ArchonApiService>();
             services.AddScoped<HTTPService>();
             services.AddScoped<UrlConverter>();
-            services.AddScoped<OSSApiService>();
             services.AddScoped<SitesService>();
             services.AddScoped<FoldersService>();
             services.AddScoped<FilesService>();
@@ -197,6 +208,8 @@ namespace Aiursoft.Pylon
             services.AddScoped<AccountService>();
             services.AddScoped<UserImageGenerator<TUser>>();
             services.AddTransient<AuthService<TUser>>();
+            services.AddMemoryCache();
+            services.AddTransient<AiurCache>();
             return services;
         }
 

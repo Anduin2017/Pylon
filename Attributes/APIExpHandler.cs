@@ -1,12 +1,8 @@
 ﻿using Aiursoft.Pylon.Exceptions;
 using Aiursoft.Pylon.Models;
-using Aiursoft.Pylon.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Aiursoft.Pylon.Attributes
 {
@@ -29,6 +25,8 @@ namespace Aiursoft.Pylon.Attributes
                     context.ExceptionHandled = true;
                     context.Result = new JsonResult(new AiurProtocol { Code = exp.Code, Message = exp.Message });
                     break;
+                case Exception e:
+                    throw e;
             }
         }
     }

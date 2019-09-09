@@ -1,9 +1,6 @@
-﻿using System;
+﻿using Aiursoft.Pylon.Services;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Aiursoft.Pylon.Models
 {
@@ -30,12 +27,12 @@ namespace Aiursoft.Pylon.Models
         public AiurUrl(string host, string controllerName, string actionName, object param) : this(host, $"/{WebUtility.UrlEncode(controllerName)}/{WebUtility.UrlEncode(actionName)}", param) { }
         public override string ToString()
         {
-            string Params = "?";
+            string appendPart = "?";
             foreach (var param in this.Params)
             {
-                Params += param.Key.ToLower() + "=" + WebUtility.UrlEncode(param.Value) + "&";
+                appendPart += param.Key.ToLower() + "=" + param.Value.ToUrlEncoded() + "&";
             }
-            return this.Address + Params.TrimEnd('?', '&');
+            return this.Address + appendPart.TrimEnd('?', '&');
         }
     }
 }

@@ -3,9 +3,6 @@ using Aiursoft.Pylon.Models;
 using Aiursoft.Pylon.Models.Probe;
 using Aiursoft.Pylon.Models.Probe.FoldersAddressModels;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Aiursoft.Pylon.Services.ToProbeServer
@@ -24,7 +21,7 @@ namespace Aiursoft.Pylon.Services.ToProbeServer
 
         public async Task<AiurValue<Folder>> ViewContentAsync(string accessToken, string siteName, string folderNames)
         {
-            var url = new AiurUrl(_serviceLocation.Probe, $"/Folders/ViewContent/{siteName}/{folderNames?.TrimStart('/')}", new ViewContentAddressModel
+            var url = new AiurUrl(_serviceLocation.Probe, $"/Folders/ViewContent/{siteName.ToUrlEncoded()}/{folderNames.EncodePath()}", new ViewContentAddressModel
             {
                 AccessToken = accessToken,
             });
@@ -37,7 +34,7 @@ namespace Aiursoft.Pylon.Services.ToProbeServer
 
         public async Task<AiurProtocol> CreateNewFolderAsync(string accessToken, string siteName, string folderNames, string newFolderName, bool recursiveCreate)
         {
-            var url = new AiurUrl(_serviceLocation.Probe, $"/Folders/CreateNewFolder/{siteName}/{folderNames}", new { });
+            var url = new AiurUrl(_serviceLocation.Probe, $"/Folders/CreateNewFolder/{siteName.ToUrlEncoded()}/{folderNames.EncodePath()}", new { });
             var form = new AiurUrl(string.Empty, new CreateNewFolderAddressModel
             {
                 AccessToken = accessToken,
@@ -53,7 +50,7 @@ namespace Aiursoft.Pylon.Services.ToProbeServer
 
         public async Task<AiurProtocol> DeleteFolderAsync(string accessToken, string siteName, string folderNames)
         {
-            var url = new AiurUrl(_serviceLocation.Probe, $"/Folders/DeleteFolder/{siteName}/{folderNames}", new { });
+            var url = new AiurUrl(_serviceLocation.Probe, $"/Folders/DeleteFolder/{siteName.ToUrlEncoded()}/{folderNames.EncodePath()}", new { });
             var form = new AiurUrl(string.Empty, new DeleteFolderAddressModel
             {
                 AccessToken = accessToken

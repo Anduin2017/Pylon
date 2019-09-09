@@ -1,4 +1,6 @@
 ﻿using Aiursoft.Pylon.Attributes;
+using Aiursoft.Pylon.Models;
+using Aiursoft.Pylon.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -8,10 +10,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
-using Aiursoft.Pylon.Services;
-using Aiursoft.Pylon.Models;
 
 namespace Aiursoft.Pylon.Middlewares
 {
@@ -49,7 +48,7 @@ namespace Aiursoft.Pylon.Middlewares
                         continue;
                     }
                     var args = GenerateArguments(method);
-                    var possibleResponses = PossibleResponses(method);
+                    var possibleResponses = GetPossibleResponses(method);
                     var api = new API
                     {
                         ControllerName = controller.Name,
@@ -67,7 +66,7 @@ namespace Aiursoft.Pylon.Middlewares
             return;
         }
 
-        private string[] PossibleResponses(MethodInfo action)
+        private string[] GetPossibleResponses(MethodInfo action)
         {
             try
             {
@@ -140,7 +139,8 @@ namespace Aiursoft.Pylon.Middlewares
                 !method.IsVirtual &&
                 !method.IsStatic &&
                 !method.IsConstructor &&
-                !method.IsDefined(typeof(NonActionAttribute));
+                !method.IsDefined(typeof(NonActionAttribute)) &&
+                !method.IsDefined(typeof(ObsoleteAttribute));
         }
 
         private bool IsAPIAction(MethodInfo action, Type controller)

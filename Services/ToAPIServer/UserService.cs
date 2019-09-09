@@ -1,12 +1,8 @@
 ﻿using Aiursoft.Pylon.Exceptions;
 using Aiursoft.Pylon.Models;
 using Aiursoft.Pylon.Models.API;
-using Aiursoft.Pylon.Models.API.ApiViewModels;
 using Aiursoft.Pylon.Models.API.UserAddressModels;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Aiursoft.Pylon.Services.ToAPIServer
@@ -24,14 +20,13 @@ namespace Aiursoft.Pylon.Services.ToAPIServer
             _http = http;
         }
 
-        public async Task<AiurProtocol> ChangeProfileAsync(string openId, string accessToken, string newNickName, /*[Obsolete]*/int fileKey, string newIconFilePathName, string newBio)
+        public async Task<AiurProtocol> ChangeProfileAsync(string openId, string accessToken, string newNickName, string newIconFilePathName, string newBio)
         {
             var url = new AiurUrl(_serviceLocation.API, "User", "ChangeProfile", new ChangeProfileAddressModel
             {
                 AccessToken = accessToken,
                 OpenId = openId,
                 NewNickName = newNickName,
-                NewIconId = fileKey,
                 NewIconFilePathName = newIconFilePathName,
                 NewBio = newBio
             });

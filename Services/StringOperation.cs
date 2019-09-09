@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Aiursoft.Pylon.Services
 {
@@ -87,7 +85,7 @@ namespace Aiursoft.Pylon.Services
 
         public static bool IsInFollowingExtension(this string filename, params string[] extensions)
         {
-            var ext = System.IO.Path.GetExtension(filename);
+            var ext = Path.GetExtension(filename);
             foreach (var extension in extensions)
             {
                 if (ext.Trim('.').ToLower() == extension)
@@ -177,6 +175,38 @@ namespace Aiursoft.Pylon.Services
                 }
             }
             return b.ToString();
+        }
+
+        public static string EncodePath(this string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return string.Empty;
+            }
+            return input.ToUrlEncoded().Replace("%2F", "/");
+        }
+
+        public static string ToUrlEncoded(this string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return string.Empty;
+            }
+            return Uri.EscapeDataString(input);
+        }
+
+        public static string AppendPath(this string root, string folder)
+        {
+            return root == null ? folder : root + "/" + folder;
+        }
+
+        public static string DetachPath(this string path)
+        {
+            if (path == null || !path.Contains("/"))
+            {
+                return null;
+            }
+            return path.Replace("/" + path.Split('/').Last(), "");
         }
     }
 }

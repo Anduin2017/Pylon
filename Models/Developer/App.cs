@@ -1,10 +1,7 @@
-﻿using Aiursoft.Pylon.Services;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace Aiursoft.Pylon.Models.Developer
 {
@@ -33,7 +30,11 @@ namespace Aiursoft.Pylon.Models.Developer
         [JsonIgnore]
         public virtual string AppSecret { get; set; }
         public virtual string AppName { get; set; }
-        public virtual string AppIconAddress { get; set; }
+
+        /// <summary>
+        /// sitename/filepath/filename.extension
+        /// </summary>
+        public string IconPath { get; set; }
         public virtual string AppDescription { get; set; }
         [DisplayFormat(DataFormatString = "{0:yyyy - MM - dd}")]
         public virtual DateTime AppCreateTime { get; set; } = DateTime.UtcNow;

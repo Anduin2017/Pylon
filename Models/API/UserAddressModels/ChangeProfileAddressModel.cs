@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Text;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Aiursoft.Pylon.Models.API.UserAddressModels
 {
@@ -10,9 +7,6 @@ namespace Aiursoft.Pylon.Models.API.UserAddressModels
         [Required]
         [MaxLength(20)]
         public string NewNickName { get; set; }
-        [Obsolete]
-        [Required]
-        public int NewIconId { get; set; }
         [Required]
         public string NewIconFilePathName { get; set; }
         [MaxLength(80)]

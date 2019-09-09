@@ -1,10 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using Aiursoft.Pylon.Attributes;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace Aiursoft.Pylon.Services
 {
@@ -53,7 +53,6 @@ namespace Aiursoft.Pylon.Services
                 return null;
             }
             else if (type.GetConstructors().All(t => t.IsPrivate))
-
             {
                 return null;
             }
@@ -65,7 +64,6 @@ namespace Aiursoft.Pylon.Services
 
         public static object Make(Type type)
         {
-            Console.WriteLine(type.FullName);
             if (type == typeof(string))
             {
                 return "an example string.";
@@ -113,6 +111,10 @@ namespace Aiursoft.Pylon.Services
                     foreach (var property in instance.GetType().GetProperties())
                     {
                         if (property.CustomAttributes.Any(t => t.AttributeType == typeof(JsonIgnoreAttribute)))
+                        {
+                            property.SetValue(instance, null);
+                        }
+                        else if (property.CustomAttributes.Any(t => t.AttributeType == typeof(InstanceMakerIgnore)))
                         {
                             property.SetValue(instance, null);
                         }

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Aiursoft.Pylon.Attributes;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 
 namespace Aiursoft.Pylon.Models.API.AccountAddressModels
 {
@@ -13,6 +11,7 @@ namespace Aiursoft.Pylon.Models.API.AccountAddressModels
         [Required]
         public string Email { get; set; }
         [Required]
+        [NoSpace]
         public string Password { get; set; }
     }
 }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Aiursoft.Pylon.Models
 {
@@ -44,16 +41,17 @@ namespace Aiursoft.Pylon.Models
             {"mp4", "video/mp4"},
             {"mpeg", "video/mpeg"},
             {"mpg", "video/mpeg"},
-            {"ogg", "application/ogg"},
+            {"ogg", "audio/ogg"},
+            {"opus", "audio/ogg"},
             {"pdf", "application/pdf"},
             {"png", "image/png"},
             {"swf", "application/x-shockwave-flash"},
             {"svg", "image/svg+xml"},
             {"tif", "image/tiff"},
+            {"tiff", "image/tiff"},
             {"txt", "text/plain"},
             {"xhtml", "application/xhtml+xml"},
             {"m4u", "video/vnd.mpegurl"},
-            {"tiff", "image/tiff"},
             {"woff","application/x-font-woff"},
             {"woff2","application/x-font-woff2"},
             {"ttf","application/x-font-truetype"},

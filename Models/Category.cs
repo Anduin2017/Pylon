@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Aiursoft.Pylon.Models
+﻿namespace Aiursoft.Pylon.Models
 {
-    public enum Category : int
+    public enum Category
     {
         Development = 0,
         AppForAiur = 1,
