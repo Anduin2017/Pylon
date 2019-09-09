@@ -1,5 +1,9 @@
 # Aiursoft Pylon
 
+[![NuGet version (Newtonsoft.Json)](https://img.shields.io/nuget/v/Aiursoft.Pylon.svg?style=flat-square)](https://www.nuget.org/packages/Aiursoft.Pylon/)
+[![Build status](https://aiursoft.visualstudio.com/Star/_apis/build/status/Nexus%20Build)](https://aiursoft.visualstudio.com/Star/_build/latest?definitionId=5)
+[![Issues](https://img.shields.io/github/issues/AiursoftWeb/Pylon.svg)](https://github.com/AiursoftWeb/Pylon/issues)
+
 > 星灵（Protoss）依靠Khaydarin水晶进行灵能链接。所有星灵依靠灵能链接维系社会秩序（不包括黑暗圣堂武士，他们切断了自己的神经束），这种秩序被叫做卡拉之道。而水晶塔（Pylon）则是真正将这些幽能输送给不同地区所必须的设施，每座水晶塔都可以散发出一种短距离的能量，提供给附近的能源和折跃门来使用。
 
 水晶塔是Protoss所有建筑的基础，除Assimilators和Nexus外。
