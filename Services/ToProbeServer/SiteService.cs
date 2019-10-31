@@ -1,4 +1,5 @@
 ﻿using Aiursoft.Pylon.Exceptions;
+using Aiursoft.Pylon.Interfaces;
 using Aiursoft.Pylon.Models;
 using Aiursoft.Pylon.Models.Probe.SitesAddressModels;
 using Aiursoft.Pylon.Models.Probe.SitesViewModels;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Aiursoft.Pylon.Services.ToProbeServer
 {
-    public class SitesService
+    public class SitesService : IScopedDependency
     {
         private readonly HTTPService _http;
         private readonly ServiceLocation _serviceLocation;
@@ -19,13 +20,15 @@ namespace Aiursoft.Pylon.Services.ToProbeServer
             _serviceLocation = serviceLocation;
         }
 
-        public async Task<AiurProtocol> CreateNewSiteAsync(string accessToken, string newSiteName)
+        public async Task<AiurProtocol> CreateNewSiteAsync(string accessToken, string newSiteName, bool openToUpload, bool openToDownload)
         {
             var url = new AiurUrl(_serviceLocation.Probe, "Sites", "CreateNewSite", new { });
             var form = new AiurUrl(string.Empty, new CreateNewSiteAddressModel
             {
                 AccessToken = accessToken,
-                NewSiteName = newSiteName
+                NewSiteName = newSiteName,
+                OpenToUpload = openToUpload,
+                OpenToDownload = openToDownload
             });
             var result = await _http.Post(url, form, true);
             var jResult = JsonConvert.DeserializeObject<AiurProtocol>(result);
@@ -42,6 +45,38 @@ namespace Aiursoft.Pylon.Services.ToProbeServer
             });
             var result = await _http.Get(url, true);
             var jResult = JsonConvert.DeserializeObject<ViewMySitesViewModel>(result);
+            if (jResult.Code != ErrorType.Success)
+                throw new AiurUnexceptedResponse(jResult);
+            return jResult;
+        }
+
+        public async Task<ViewSiteDetailViewModel> ViewSiteDetailAsync(string accessToken, string siteName)
+        {
+            var url = new AiurUrl(_serviceLocation.Probe, "Sites", "ViewSiteDetail", new ViewSiteDetailAddressModel
+            {
+                AccessToken = accessToken,
+                SiteName = siteName
+            });
+            var result = await _http.Get(url, true);
+            var jResult = JsonConvert.DeserializeObject<ViewSiteDetailViewModel>(result);
+            if (jResult.Code != ErrorType.Success)
+                throw new AiurUnexceptedResponse(jResult);
+            return jResult;
+        }
+
+        public async Task<AiurProtocol> UpdateSiteInfoAsync(string accessToken, string oldSiteName, string newSiteName, bool openToUpload, bool openToDownload)
+        {
+            var url = new AiurUrl(_serviceLocation.Probe, "Sites", "UpdateSiteInfo", new { });
+            var form = new AiurUrl(string.Empty, new UpdateSiteInfoAddressModel
+            {
+                AccessToken = accessToken,
+                OldSiteName = oldSiteName,
+                NewSiteName = newSiteName,
+                OpenToDownload = openToDownload,
+                OpenToUpload = openToUpload
+            });
+            var result = await _http.Post(url, form, true);
+            var jResult = JsonConvert.DeserializeObject<AiurProtocol>(result);
             if (jResult.Code != ErrorType.Success)
                 throw new AiurUnexceptedResponse(jResult);
             return jResult;

@@ -27,7 +27,7 @@ namespace Aiursoft.Pylon.Middlewares
 
         public async Task Invoke(HttpContext context)
         {
-            if (context.Request.Path.ToString().ToLower() != "/doc")
+            if (context.Request.Path.ToString().Trim().Trim('/').ToLower() != "doc")
             {
                 await _next.Invoke(context);
                 return;
@@ -56,7 +56,6 @@ namespace Aiursoft.Pylon.Middlewares
                         IsPost = method.CustomAttributes.Any(t => t.AttributeType == typeof(HttpPostAttribute)),
                         Arguments = args,
                         AuthRequired = JudgeAuthorized(method, controller),
-                        RequiresFile = JudgeRequiredFile(method, controller),
                         PossibleResponses = possibleResponses
                     };
                     actionsMatches.Add(api);
@@ -146,6 +145,8 @@ namespace Aiursoft.Pylon.Middlewares
         private bool IsAPIAction(MethodInfo action, Type controller)
         {
             return
+                action.CustomAttributes.Any(t => t.AttributeType == typeof(GenerateDoc)) ||
+                controller.CustomAttributes.Any(t => t.AttributeType == typeof(GenerateDoc)) ||
                 action.CustomAttributes.Any(t => t.AttributeType == typeof(APIExpHandler)) ||
                 controller.CustomAttributes.Any(t => t.AttributeType == typeof(APIExpHandler)) ||
                 action.CustomAttributes.Any(t => t.AttributeType == typeof(APIModelStateChecker)) ||
@@ -188,13 +189,6 @@ namespace Aiursoft.Pylon.Middlewares
                 action.CustomAttributes.Any(t => t.AttributeType == typeof(AiurForceAuth)) ||
                 controller.CustomAttributes.Any(t => t.AttributeType == typeof(AiurForceAuth));
         }
-
-        private bool JudgeRequiredFile(MethodInfo action, Type controller)
-        {
-            return
-                action.CustomAttributes.Any(t => t.AttributeType == typeof(FileChecker)) ||
-                controller.CustomAttributes.Any(t => t.AttributeType == typeof(FileChecker));
-        }
     }
 
     public class API
@@ -204,7 +198,6 @@ namespace Aiursoft.Pylon.Middlewares
         public bool AuthRequired { get; set; }
         public bool IsPost { get; set; }
         public List<Argument> Arguments { get; set; }
-        public bool RequiresFile { get; set; }
         public string[] PossibleResponses { get; set; }
     }
 

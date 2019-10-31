@@ -1,11 +1,12 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Aiursoft.Pylon.Interfaces;
+using Microsoft.Extensions.Configuration;
 
 namespace Aiursoft.Pylon.Services
 {
-    public class ServiceLocation
+    public class ServiceLocation : ISingletonDependency
     {
         public readonly string Account;
-        public readonly string API;
+        public readonly string Gateway;
         public readonly string Archon;
         public readonly string UI;
         public readonly string Colossus;
@@ -16,21 +17,25 @@ namespace Aiursoft.Pylon.Services
         public readonly string Wiki;
         public readonly string WWW;
         public readonly string Probe;
+        public readonly string ProbeIO;
+        public readonly string Status;
 
         public ServiceLocation(IConfiguration configuration)
         {
             var section = configuration.GetSection("Dependencies");
             Account = TrySet(section["AccountPath"], "https://account.aiursoft.com");
-            API = TrySet(section["APIPath"], "https://api.aiursoft.com");
+            Gateway = TrySet(section["GatewayPath"], "https://gateway.aiursoft.com");
             Archon = TrySet(section["ArchonPath"], "https://archon.aiursoft.com");
-            UI = TrySet(section["UIPath"], "https://ui.cdn.aiursoft.com");
+            UI = TrySet(section["UIPath"], "https://ui.aiursoft.com");
             Colossus = TrySet(section["ColossusPath"], "https://colossus.aiursoft.com");
             Developer = TrySet(section["DeveloperPath"], "https://developer.aiursoft.com");
             EE = TrySet(section["EEPath"], "https://ee.aiursoft.com");
             Stargate = TrySet(section["StargatePath"], "https://stargate.aiursoft.com");
             Wiki = TrySet(section["WikiPath"], "https://wiki.aiursoft.com");
-            WWW = TrySet(section["WWW"], "https://www.aiursoft.com");
-            Probe = TrySet(section["Probe"], "https://probe.aiursoft.com");
+            WWW = TrySet(section["WWWPath"], "https://www.aiursoft.com");
+            Probe = TrySet(section["ProbePath"], "https://probe.aiursoft.com");
+            ProbeIO = TrySet(section["ProbeIOPath"], "https://{0}.aiursoft.io");
+            Status = TrySet(section["StatusPath"], "https://status.aiursoft.com");
 
             StargateListenAddress = Stargate
                 .Replace("https://", "wss://")

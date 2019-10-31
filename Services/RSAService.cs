@@ -1,27 +1,26 @@
-﻿using Aiursoft.Pylon.Models;
+﻿using Aiursoft.Pylon.Interfaces;
+using Aiursoft.Pylon.Models;
 using System.Security.Cryptography;
 
 namespace Aiursoft.Pylon.Services
 {
-    public class RSAService
+    public class RSAService : IScopedDependency
     {
         private readonly RSAParameters _privateKey;
-        public readonly RSAParameters _publicKey;
+        private readonly RSAParameters _publicKey;
+        private readonly RSA _rsa;
         public RSAService(AiurKeyPair keypair)
         {
             _privateKey = keypair.PrivateKey;
             _publicKey = keypair.PublicKey;
+            _rsa = RSA.Create();
         }
 
         public string SignData(string message)
         {
             var originalData = message.StringToBytes();
-
-            var rsa = RSA.Create();
-            rsa.ImportParameters(_privateKey);
-            
-            var signedBytes = rsa.SignData(originalData, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-            
+            _rsa.ImportParameters(_privateKey);
+            var signedBytes = _rsa.SignData(originalData, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             return signedBytes.BytesToBase64();
         }
 
@@ -29,10 +28,8 @@ namespace Aiursoft.Pylon.Services
         {
             var bytesToVerify = originalMessage.StringToBytes();
             var signedBytes = signedBase64.Base64ToBytes();
-
-            var rsa = RSA.Create();
-            rsa.ImportParameters(_publicKey);
-            return rsa.VerifyData(bytesToVerify, signedBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            _rsa.ImportParameters(_publicKey);
+            return _rsa.VerifyData(bytesToVerify, signedBytes, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         }
     }
 }

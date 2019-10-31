@@ -1,32 +1,33 @@
+using Aiursoft.Pylon.Interfaces;
 using Aiursoft.Pylon.Middlewares;
 using Aiursoft.Pylon.Models;
 using Aiursoft.Pylon.Models.API.OAuthAddressModels;
 using Aiursoft.Pylon.Services;
-using Aiursoft.Pylon.Services.ToAPIServer;
-using Aiursoft.Pylon.Services.ToArchonServer;
-using Aiursoft.Pylon.Services.ToProbeServer;
+using Aiursoft.Pylon.Services.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Polly;
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Aiursoft.Pylon
 {
     public static class Extends
     {
-        public static string CurrentAppId { get; private set; } = string.Empty;
-        public static string CurrentAppSecret { get; private set; } = string.Empty;
-
         private static CultureInfo[] GetSupportedLanguages()
         {
             var supportedCultures = new[]
@@ -37,83 +38,65 @@ namespace Aiursoft.Pylon
             return supportedCultures;
         }
 
-        public static IApplicationBuilder UseAiursoftSupportedCultures(this IApplicationBuilder app, string defaultLanguage = "en")
+        public static IApplicationBuilder UseAiurAPIHandler(this IApplicationBuilder app, bool isDevelopment)
+        {
+            if (isDevelopment)
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseDatabaseErrorPage();
+            }
+            else
+            {
+                app.UseMiddleware<HandleRobotsMiddleware>();
+                app.UseMiddleware<EnforceHttpsMiddleware>();
+                app.UseMiddleware<APIFriendlyServerExceptionMiddeware>();
+            }
+            return app;
+        }
+
+        public static IApplicationBuilder UseAiurUserHandler(this IApplicationBuilder app, bool isDevelopment)
+        {
+            if (isDevelopment)
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseDatabaseErrorPage();
+            }
+            else
+            {
+                app.UseMiddleware<HandleRobotsMiddleware>();
+                app.UseMiddleware<EnforceHttpsMiddleware>();
+                app.UseMiddleware<UserFriendlyServerExceptionMiddeware>();
+                app.UseMiddleware<UserFriendlyNotFoundMiddeware>();
+            }
+            return app;
+        }
+
+        /// <summary>
+        /// Static files, routing, auth, language switcher, endpoints.
+        /// </summary>
+        /// <param name="app"></param>
+        /// <returns></returns>
+        public static IApplicationBuilder UseAiursoftDefault(this IApplicationBuilder app)
         {
             app.UseRequestLocalization(new RequestLocalizationOptions
             {
-                DefaultRequestCulture = new RequestCulture(defaultLanguage),
+                DefaultRequestCulture = new RequestCulture("en"),
                 SupportedCultures = GetSupportedLanguages(),
                 SupportedUICultures = GetSupportedLanguages()
             });
+            app.UseStaticFiles();
+            app.UseRouting();
+            app.UseAuthentication();
+            app.UseAuthorization();
+            app.UseMiddleware<SwitchLanguageMiddleware>();
+            app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
+            app.UseDocGenerator();
             return app;
-        }
-
-        public static IApplicationBuilder UseAiursoftAuthenticationFromConfiguration(this IApplicationBuilder app, IConfiguration configuration, string appName)
-        {
-            var appId = configuration[$"{appName}AppId"];
-            var appSecret = configuration[$"{appName}AppSecret"];
-            if (string.IsNullOrWhiteSpace(appId) || string.IsNullOrWhiteSpace(appSecret))
-            {
-                throw new InvalidOperationException("Did not get appId and appSecret from configuration!");
-            }
-            return app.UseAiursoftAuthentication(appId, appSecret);
-        }
-
-        public static IApplicationBuilder UseAiursoftAuthentication(this IApplicationBuilder app, string appId, string appSecret)
-        {
-            if (string.IsNullOrWhiteSpace(appId))
-            {
-                throw new InvalidOperationException(nameof(appId));
-            }
-            if (string.IsNullOrWhiteSpace(appSecret))
-            {
-                throw new InvalidOperationException(nameof(appSecret));
-            }
-            CurrentAppId = appId;
-            CurrentAppSecret = appSecret;
-            return app;
-        }
-
-        public static IApplicationBuilder UseEnforceHttps(this IApplicationBuilder app)
-        {
-            return app.UseMiddleware<EnforceHttpsMiddleware>();
-        }
-
-        public static IApplicationBuilder UseHandleRobots(this IApplicationBuilder app)
-        {
-            return app.UseMiddleware<HandleRobotsMiddleware>();
-        }
-
-        public static IApplicationBuilder UseLanguageSwitcher(this IApplicationBuilder app)
-        {
-            return app.UseMiddleware<SwitchLanguageMiddleware>();
         }
 
         public static IApplicationBuilder UseDocGenerator(this IApplicationBuilder app)
         {
             return app.UseMiddleware<APIDocGeneratorMiddleware>();
-        }
-
-        public static IApplicationBuilder UseUserFriendlyErrorPage(this IApplicationBuilder app)
-        {
-            app.UseMiddleware<UserFriendlyServerExceptionMiddeware>();
-            app.UseMiddleware<UserFriendlyNotFoundMiddeware>();
-            return app;
-        }
-
-        public static IApplicationBuilder UseAPIFriendlyErrorPage(this IApplicationBuilder app)
-        {
-            app.UseMiddleware<APIFriendlyServerExceptionMiddeware>();
-            return app;
-        }
-
-        public static IServiceCollection ConfigureLargeFileUpload(this IServiceCollection services)
-        {
-            return services.Configure<FormOptions>(x =>
-            {
-                x.ValueLengthLimit = int.MaxValue;
-                x.MultipartBodyLengthLimit = long.MaxValue;
-            });
         }
 
         public static IActionResult SignOutRootServer(this Controller controller, string apiServerAddress, AiurUrl viewingUrl)
@@ -144,15 +127,15 @@ namespace Aiursoft.Pylon
                 new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1) });
         }
 
-        public static IWebHost MigrateDbContext<TContext>(this IWebHost webHost, Action<TContext, IServiceProvider> seeder = null) where TContext : DbContext
+        public static IHost MigrateDbContext<TContext>(this IHost host, Action<TContext, IServiceProvider> seeder = null) where TContext : DbContext
         {
-            using (var scope = webHost.Services.CreateScope())
+            using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
                 var logger = services.GetRequiredService<ILogger<TContext>>();
                 var context = services.GetService<TContext>();
                 var configuration = services.GetService<IConfiguration>();
-                var env = services.GetService<IHostingEnvironment>();
+                var env = services.GetService<IWebHostEnvironment>();
 
                 var connectionString = configuration.GetConnectionString("DatabaseConnection");
                 try
@@ -170,16 +153,13 @@ namespace Aiursoft.Pylon
                     {
                         // Migrate even in production level.
                         context.Database.Migrate();
-                        if (env.IsDevelopment())
+                        try
                         {
-                            try
-                            {
-                                seeder?.Invoke(context, services);
-                            }
-                            catch (Exception ex)
-                            {
-                                logger.LogError(ex, $"An error occurred while seeding the database used on context {typeof(TContext).Name}");
-                            }
+                            seeder?.Invoke(context, services);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, $"An error occurred while seeding the database used on context {typeof(TContext).Name}");
                         }
                     });
                     logger.LogInformation($"Migrated database associated with context {typeof(TContext).Name}");
@@ -190,34 +170,71 @@ namespace Aiursoft.Pylon
                 }
             }
 
-            return webHost;
+            return host;
         }
 
-        public static IServiceCollection AddAiursoftAuth<TUser>(this IServiceCollection services) where TUser : AiurUserBase, new()
+        public static IServiceCollection AddAiurMvc(this IServiceCollection services)
         {
-            services.AddSingleton<AppsContainer>();
-            services.AddSingleton<ServiceLocation>();
-            services.AddScoped<ArchonApiService>();
-            services.AddScoped<HTTPService>();
-            services.AddScoped<UrlConverter>();
-            services.AddScoped<SitesService>();
-            services.AddScoped<FoldersService>();
-            services.AddScoped<FilesService>();
-            services.AddScoped<StorageService>();
-            services.AddScoped<CoreApiService>();
-            services.AddScoped<AccountService>();
-            services.AddScoped<UserImageGenerator<TUser>>();
-            services.AddTransient<AuthService<TUser>>();
-            services.AddMemoryCache();
-            services.AddTransient<AiurCache>();
+            services.AddLocalization(options => options.ResourcesPath = "Resources");
+
+            services
+                .AddControllersWithViews()
+                .AddNewtonsoftJson()
+                .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
+                .AddDataAnnotationsLocalization()
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+
             return services;
         }
 
-        public static IServiceCollection AddTokenManager(this IServiceCollection services)
+        public static IServiceCollection AddAiurDependencies<TUser>(this IServiceCollection services, string appName) where TUser : AiurUserBase, new()
         {
-            services.AddSingleton<AiurKeyPair>();
-            services.AddTransient<RSAService>();
-            services.AddTransient<ACTokenManager>();
+            services.AddScoped<UserImageGenerator<TUser>>();
+            services.AddTransient<AuthService<TUser>>();
+            services.AddAiurDependencies(appName);
+            return services;
+        }
+
+        public static IServiceCollection AddAiurDependencies(this IServiceCollection services, string appName)
+        {
+            AppsContainer.CurrentAppName = appName;
+            services.AddHttpClient();
+            services.AddMemoryCache();
+            var executingTypes = Assembly.GetExecutingAssembly().GetTypes().Where(t => !t.IsInterface).ToList();
+            var entryTypes = Assembly.GetEntryAssembly().GetTypes().Where(t => !t.IsInterface).ToList();
+            executingTypes.AddRange(entryTypes);
+            foreach (var item in executingTypes)
+            {
+                if (item.GetInterfaces().Contains(typeof(ISingletonDependency)))
+                {
+                    if (item.GetInterfaces().Contains(typeof(IHostedService)))
+                    {
+                        services.AddSingleton(typeof(IHostedService), item);
+                    }
+                    else
+                    {
+                        services.AddSingleton(item);
+                    }
+                    Console.WriteLine($"Service: {item.Name} - was successfully registered as a singleton service.");
+                }
+                else if (item.GetInterfaces().Contains(typeof(IScopedDependency)))
+                {
+                    if (item.GetInterfaces().Contains(typeof(IAuthProvider)))
+                    {
+                        services.AddScoped(typeof(IAuthProvider), item);
+                    }
+                    else
+                    {
+                        services.AddScoped(item);
+                    }
+                    Console.WriteLine($"Service: {item.Name} - was successfully registered as a scoped service.");
+                }
+                else if (item.GetInterfaces().Contains(typeof(ITransientDependency)))
+                {
+                    services.AddTransient(item);
+                    Console.WriteLine($"Service: {item.Name} - was successfully registered as a transient service.");
+                }
+            }
             return services;
         }
 
@@ -239,6 +256,16 @@ namespace Aiursoft.Pylon
         public static string UserAgent(this HttpRequest request)
         {
             return request.Headers["User-Agent"];
+        }
+
+        public static Task ForEachParallel<T>(this IEnumerable<T> items, Func<T, Task> function)
+        {
+            var taskList = new List<Task>();
+            foreach (var item in items)
+            {
+                taskList.Add(function(item));
+            }
+            return Task.WhenAll(taskList);
         }
     }
 }

@@ -1,13 +1,14 @@
 ﻿using Aiursoft.Pylon.Exceptions;
+using Aiursoft.Pylon.Interfaces;
 using Aiursoft.Pylon.Models;
 using Aiursoft.Pylon.Models.API.AccountAddressModels;
 using Aiursoft.Pylon.Models.API.AccountViewModels;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
 
-namespace Aiursoft.Pylon.Services.ToAPIServer
+namespace Aiursoft.Pylon.Services.ToGatewayServer
 {
-    public class AccountService
+    public class AccountService : IScopedDependency
     {
         private readonly ServiceLocation _serviceLocation;
         private readonly HTTPService _http;
@@ -22,7 +23,7 @@ namespace Aiursoft.Pylon.Services.ToAPIServer
 
         public async Task<CodeToOpenIdViewModel> CodeToOpenIdAsync(string accessToken, int code)
         {
-            var url = new AiurUrl(_serviceLocation.API, "Account", "CodeToOpenId", new CodeToOpenIdAddressModel
+            var url = new AiurUrl(_serviceLocation.Gateway, "Account", "CodeToOpenId", new CodeToOpenIdAddressModel
             {
                 AccessToken = accessToken,
                 Code = code
@@ -37,7 +38,7 @@ namespace Aiursoft.Pylon.Services.ToAPIServer
 
         public async Task<UserInfoViewModel> OpenIdToUserInfo(string accessToken, string openid)
         {
-            var url = new AiurUrl(_serviceLocation.API, "Account", "UserInfo", new UserInfoAddressModel
+            var url = new AiurUrl(_serviceLocation.Gateway, "Account", "UserInfo", new UserInfoAddressModel
             {
                 AccessToken = accessToken,
                 OpenId = openid

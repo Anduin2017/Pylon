@@ -10,7 +10,13 @@ namespace Aiursoft.Pylon.Models.Probe.SitesAddressModels
         [Required]
         [MaxLength(50)]
         [MinLength(5)]
-        [ValidFolderName]
+        [ValidDomainName]
         public string NewSiteName { get; set; }
+
+        [Required]
+        public bool OpenToUpload { get; set; }
+
+        [Required]
+        public bool OpenToDownload { get; set; }
     }
 }

@@ -9,7 +9,7 @@ namespace Aiursoft.Pylon.Models.Developer
     {
         [Obsolete(error: true, message: "This method is only for framework!")]
         public App() { }
-        public App(string name, string description, Category category, Platform platform, string forceAppId = null, string forceAppSecret = null)
+        public App(string name, string description, Category category, Platform platform, string iconPath = null, string forceAppId = null, string forceAppSecret = null)
         {
             if (!string.IsNullOrWhiteSpace(forceAppId) && !string.IsNullOrWhiteSpace(forceAppSecret))
             {
@@ -25,6 +25,7 @@ namespace Aiursoft.Pylon.Models.Developer
             this.AppDescription = description;
             this.AppCategory = category;
             this.AppPlatform = platform;
+            this.IconPath = iconPath;
         }
         public virtual string AppId { get; set; }
         [JsonIgnore]
@@ -58,6 +59,8 @@ namespace Aiursoft.Pylon.Models.Developer
         public bool ChangeBasicInfo { get; set; }
         public bool ChangePassword { get; set; }
         public bool ChangeGrantInfo { get; set; }
+        public bool ViewAuditLog { get; set; }
+        public bool ManageSocialAccount { get; set; }
 
         public virtual string CreatorId { get; set; }
         [ForeignKey(nameof(CreatorId))]

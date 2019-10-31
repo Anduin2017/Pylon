@@ -1,4 +1,5 @@
 ﻿using Aiursoft.Pylon.Exceptions;
+using Aiursoft.Pylon.Interfaces;
 using Aiursoft.Pylon.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -12,7 +13,7 @@ namespace Aiursoft.Pylon.Services
         public DateTime Expires { get; set; }
     }
 
-    public class ACTokenManager
+    public class ACTokenManager : IScopedDependency
     {
         private readonly RSAService _rsa;
         public ACTokenManager(RSAService rsa)
@@ -42,14 +43,11 @@ namespace Aiursoft.Pylon.Services
 
         public string ValidateAccessToken(string value)
         {
-            ACToken token = null;
-            string tokenBase64 = null;
-            string tokenSign = null;
+            ACToken token;
             try
             {
                 var tokenparts = value.Split('.');
-                tokenBase64 = tokenparts[0];
-                tokenSign = tokenparts[1];
+                string tokenBase64 = tokenparts[0], tokenSign = tokenparts[1];
                 token = JsonConvert.DeserializeObject<ACToken>(tokenBase64.Base64ToString());
                 if (DateTime.UtcNow > token.Expires)
                 {
