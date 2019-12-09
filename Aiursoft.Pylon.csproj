@@ -1,13 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
   <PropertyGroup>
-    <Version>0.20.1</Version>
+    <Version>0.20.2</Version>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Title>Aiursoft.Pylon</Title>
-    <AssemblyName>Aiursoft.Pylon</AssemblyName>
-    <PackageId>Aiursoft.Pylon</PackageId>
-    <Company>Aiursoft</Company>
-    <Product>AiursoftWeb</Product>
-    <Authors>Anduin</Authors>
     <Description>The base class, interfaces and services for Aiursoft web apps.</Description>
     <PackageTags>base-class shared-component aiursoft pylon</PackageTags>
     <PackageIcon>pylon.png</PackageIcon>
